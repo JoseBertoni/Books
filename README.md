@@ -35,6 +35,9 @@ Sistema de gestión de biblioteca que permite:
 - **FluentValidation** - Validación de modelos
 - **Swagger/OpenAPI** - Documentación interactiva
 - **Memory Cache** - Optimización de consultas
+- **xUnit** - Framework de testing
+- **Moq** - Mocking para tests
+- **FluentAssertions** - Assertions expresivas
 
 ### Frontend (React)
 - **React 19** - Biblioteca UI
@@ -44,11 +47,16 @@ Sistema de gestión de biblioteca que permite:
 - **Axios** - Cliente HTTP
 - **Vite** - Build tool y dev server
 - **date-fns** - Manejo de fechas
+- **Vitest** - Framework de testing
+- **Testing Library** - Tests de componentes
+- **happy-dom** - DOM environment para tests
 
 ## 🚀 Características
 
 ### Backend
 - ✅ CRUD completo de libros
+- ✅ Búsqueda por título (case-insensitive)
+- ✅ Filtrado por género
 - ✅ Validación de datos con FluentValidation
 - ✅ Paginación de resultados
 - ✅ Caché en memoria (5 minutos) para optimización
@@ -57,17 +65,23 @@ Sistema de gestión de biblioteca que permite:
 - ✅ Soporte CORS para frontend
 - ✅ Patrón Repository + Service (arquitectura limpia)
 - ✅ Migraciones automáticas con EF Core
+- ✅ Tests unitarios completos (Repository, Service, Validator)
 
 ### Frontend
 - ✅ Interfaz moderna y atractiva con Material UI
 - ✅ Diseño completamente responsive
 - ✅ Paginación integrada
+- ✅ Búsqueda por título con debounce
+- ✅ Filtrado por género
 - ✅ Validaciones en tiempo real
 - ✅ Estados de carga con spinners
 - ✅ Notificaciones de éxito/error
 - ✅ Animaciones y transiciones suaves
 - ✅ Type safety completo con TypeScript
 - ✅ Arquitectura escalable con Context API
+- ✅ Componentes genéricos reutilizables
+- ✅ Custom hooks (usePagination, useDebounce)
+- ✅ Constantes centralizadas
 
 
 ## 📋 Requisitos Previos
@@ -163,6 +177,11 @@ LibraryAPI/
 │   └── Validators/
 │       └── CreateLibroDtoValidator.cs
 └── Program.cs           # Punto de entrada
+
+LibraryAPI.Tests/        # Tests unitarios
+├── LibroRepositoryTests.cs
+├── LibroServiceTests.cs
+└── CreateLibroDtoValidatorTests.cs
 ```
 
 ### Configuración de Base de Datos
@@ -202,10 +221,22 @@ Server=localhost;Database=Libreria;User Id=sa;Password=TuPassword;TrustServerCer
 **Parámetros de consulta:**
 - `pageNumber` (opcional, default: 1) - Número de página
 - `pageSize` (opcional, default: 10, max: 100) - Cantidad de libros por página
+- `searchTerm` (opcional) - Buscar por título (case-insensitive)
+- `genero` (opcional) - Filtrar por género exacto
 
-**Ejemplo de solicitud:**
+**Ejemplos de solicitud:**
 ```bash
+# Obtener todos los libros paginados
 GET http://localhost:5057/api/Libros?pageNumber=1&pageSize=10
+
+# Buscar libros por título
+GET http://localhost:5057/api/Libros?searchTerm=resplandor
+
+# Filtrar por género
+GET http://localhost:5057/api/Libros?genero=Horror
+
+# Combinar búsqueda y filtro
+GET http://localhost:5057/api/Libros?searchTerm=king&genero=Horror&pageSize=5
 ```
 
 **Ejemplo de respuesta (200 OK):**
@@ -295,6 +326,86 @@ Content-Type: application/json
 
 ## 🧪 Pruebas
 
+### Backend - Tests Unitarios
+
+El backend incluye un proyecto de tests completo con **xUnit**, **Moq** y **FluentAssertions**.
+
+**Ejecutar todos los tests:**
+```bash
+cd LibraryAPI.Tests
+dotnet test
+```
+
+**Ejecutar tests con detalles:**
+```bash
+dotnet test --verbosity detailed
+```
+
+**Ejecutar tests con coverage:**
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+**Cobertura de tests:**
+- ✅ **LibroRepositoryTests** (7 tests): Capa de acceso a datos
+  - GetAllAsync con paginación
+  - GetAllAsync con búsqueda por título
+  - GetAllAsync con filtro por género
+  - GetAllAsync combinando búsqueda y filtro
+  - AddAsync - agregar libro
+  - GetByIdAsync - obtener libro por ID
+  - GetByIdAsync - libro no encontrado
+
+- ✅ **LibroServiceTests** (4 tests): Lógica de negocio
+  - GetLibrosAsync con paginación
+  - GetLibrosAsync con caché
+  - CreateLibroAsync crea libro correctamente
+  - GetLibrosAsync pasa parámetros de búsqueda y filtro al repository
+
+- ✅ **CreateLibroDtoValidatorTests** (5 tests): Validaciones
+  - DTO válido pasa validación
+  - Título requerido
+  - Autor requerido
+  - Descripción requerida
+  - Fecha de publicación no puede ser futura
+
+**Total: 16 tests ✅**
+
+### Frontend - Tests Unitarios
+
+El frontend utiliza **Vitest**, **Testing Library** y **happy-dom**.
+
+**Ejecutar todos los tests:**
+```bash
+cd LibraryFront
+npm test
+```
+
+**Ejecutar tests en modo watch:**
+```bash
+npm run test:watch
+```
+
+**Ejecutar tests con UI interactiva:**
+```bash
+npm run test:ui
+```
+
+**Ejecutar tests con coverage:**
+```bash
+npm run test:coverage
+```
+
+**Cobertura de tests:**
+- ✅ **EmptyState.test.tsx** (4 tests): Componente de estado vacío
+- ✅ **InfoItem.test.tsx** (2 tests): Componente de item informativo
+- ✅ **LoadingSpinner.test.tsx** (3 tests): Componente de carga
+- ✅ **ResponsiveGrid.test.tsx** (3 tests): Grid responsive
+- ✅ **usePagination.test.ts** (8 tests): Hook de paginación
+- ✅ **useDebounce.test.ts** (3 tests): Hook de debounce
+
+**Total: 23 tests ✅**
+
 ### Probar el Backend con Swagger
 
 1. Ejecuta la API: `dotnet run` en `LibraryAPI/`
@@ -343,6 +454,8 @@ curl -X POST "http://localhost:5057/api/Libros" \
 3. Abre el navegador en: http://localhost:5173
 4. Prueba las siguientes acciones:
    - ✅ Ver lista de libros con paginación
+   - ✅ Buscar libros por título
+   - ✅ Filtrar libros por género
    - ✅ Navegar entre páginas
    - ✅ Agregar un nuevo libro
    - ✅ Validar errores en el formulario
@@ -390,30 +503,52 @@ Swagger UI te permite:
 LibraryFront/
 ├── src/
 │   ├── components/          # Componentes React
+│   │   ├── common/          # Componentes genéricos reutilizables
+│   │   │   ├── EmptyState/
+│   │   │   ├── InfoItem/
+│   │   │   ├── LoadingSpinner/
+│   │   │   └── ResponsiveGrid/
 │   │   ├── ErrorSnackbar/   # Notificaciones de error
 │   │   ├── Layout/          # Layout principal
 │   │   ├── LibroCard/       # Card de libro individual
 │   │   ├── LibroForm/       # Formulario de creación
-│   │   └── LibroList/       # Lista con paginación
+│   │   ├── LibroList/       # Lista con paginación
+│   │   └── SearchFilters/   # Búsqueda y filtros
+│   ├── constants/           # Constantes centralizadas
+│   │   ├── generos.ts       # Lista de géneros
+│   │   └── app.ts           # Configuración global
 │   ├── context/             # Context API
 │   │   └── LibrosContext.tsx
+│   ├── hooks/               # Custom hooks
+│   │   ├── usePagination.ts
+│   │   └── useDebounce.ts
 │   ├── services/            # Servicios HTTP
 │   │   └── api.service.ts
 │   ├── types/               # TypeScript types
 │   │   └── libro.types.ts
 │   ├── config/              # Configuración
 │   │   └── api.config.ts
+│   ├── tests/               # Tests
+│   │   ├── components/
+│   │   └── hooks/
 │   ├── App.tsx              # Componente principal
 │   └── main.tsx             # Punto de entrada
 ├── .env                     # Variables de entorno
 ├── package.json
 ├── tsconfig.json
-└── vite.config.ts
+├── vite.config.ts
+└── vitest.config.ts         # Configuración de tests
 ```
 
 ### Componentes Principales
 
-#### 1️⃣ **LibroForm** - Formulario de Creación
+#### 1️⃣ **SearchFilters** - Búsqueda y Filtros
+- Campo de búsqueda por título con debounce (500ms)
+- Selector de género con opción "Todos"
+- Actualización automática de resultados
+- Diseño responsive (se apilan en móviles)
+
+#### 2️⃣ **LibroForm** - Formulario de Creación
 - Campos: Título, Autor, Género, Fecha de Publicación, Descripción
 - Validaciones en tiempo real
 - Mensajes de error específicos por campo
@@ -421,21 +556,31 @@ LibraryFront/
 - Notificación de éxito
 - Layout responsive (2 columnas en desktop)
 
-#### 2️⃣ **LibroList** - Lista con Paginación
+#### 3️⃣ **LibroList** - Lista con Paginación
 - Grid responsive (3 columnas desktop, 2 tablet, 1 móvil)
 - Paginación completa con navegación
 - Indicadores de carga
 - Estado vacío con mensaje informativo
 - Información de resultados (mostrando X de Y)
 
-#### 3️⃣ **LibroCard** - Tarjeta de Libro
+#### 4️⃣ **LibroCard** - Tarjeta de Libro
 - Efecto hover con elevación
 - Chip de género con color
 - Fecha formateada en español
 - Descripción truncada
 - Animación de entrada suave
 
-#### 4️⃣ **Layout** - Estructura Principal
+#### 5️⃣ **Componentes Genéricos Reutilizables**
+- `EmptyState`: Estado vacío con icono, título y descripción
+- `LoadingSpinner`: Indicador de carga configurable
+- `ResponsiveGrid`: Grid responsive con configuración por breakpoints
+- `InfoItem`: Item con icono y texto para mostrar información
+
+#### 6️⃣ **Custom Hooks**
+- `usePagination`: Lógica de paginación reutilizable
+- `useDebounce`: Debounce de valores con delay configurable
+
+#### 7️⃣ **Layout** - Estructura Principal
 - Header con icono y título
 - Container responsive
 - Footer con información
@@ -460,6 +605,15 @@ npm run build
 
 # Vista previa de build de producción
 npm run preview
+
+# Ejecutar tests
+npm test
+
+# Ejecutar tests con UI interactiva
+npm run test:ui
+
+# Ejecutar tests con coverage
+npm run test:coverage
 
 # Linter
 npm run lint
@@ -493,6 +647,7 @@ npm run lint
 - Misterio
 - Romance
 - Thriller
+- Horror
 - Biografía
 - Historia
 - Tecnología
@@ -525,17 +680,32 @@ npm run lint
 
 #### Backend
 - **Repository Pattern**: Abstracción del acceso a datos
+  - `ILibroRepository` / `LibroRepository`
+  - Soporte para búsqueda, filtrado y paginación
 - **Service Pattern**: Lógica de negocio centralizada
+  - `ILibroService` / `LibroService`
+  - Gestión de caché con claves dinámicas
 - **Dependency Injection**: IoC Container de .NET
 - **Middleware Pattern**: Manejo global de excepciones
 - **DTO Pattern**: Separación entre dominio y API
+- **FluentValidation**: Validaciones declarativas
+- **Unit Testing**: xUnit + Moq + FluentAssertions
 
 #### Frontend
 - **Context API**: Gestión de estado global
+  - `LibrosContext` maneja estado de libros, búsqueda y filtros
 - **Component Pattern**: Componentes reutilizables
+  - Genéricos: `EmptyState`, `LoadingSpinner`, `ResponsiveGrid`, `InfoItem`
+  - Específicos: `LibroCard`, `LibroForm`, `LibroList`, `SearchFilters`
 - **Custom Hooks**: Lógica compartida
+  - `usePagination`: Manejo de paginación
+  - `useDebounce`: Debounce para búsqueda
 - **Service Layer**: Comunicación con API
+  - `api.service.ts` con axios
 - **Type Safety**: TypeScript estricto
+- **Constants**: Centralización de valores fijos
+  - `GENEROS`, `PAGINATION`, `DEBOUNCE_DELAY`
+- **Unit Testing**: Vitest + Testing Library + happy-dom
 
 ---
 
